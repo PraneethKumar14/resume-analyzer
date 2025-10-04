@@ -48,22 +48,32 @@ def upload_file():
             resume_text = extract_text_from_docx(file)
             file_type = 'docx'
         
+        # Debug information
+        print(f"📄 Extracted text length: {len(resume_text)}")
+        print(f"📄 File type: {file_type}")
+        print(f"📄 First 100 characters: {resume_text[:100] if len(resume_text) > 100 else resume_text}")
+        
         # Get job description if provided
         job_description = request.form.get('job_description', '')
         
-        # Analyze with job description support
+        # Analyze with job description support and get dynamic score
         from utils.ats_analyzer import analyze_resume_text
-        issues = analyze_resume_text(resume_text, job_description)
+        issues, ats_score = analyze_resume_text(resume_text, job_description)
+        
+        # Debug: Print analysis results
+        print(f"🔍 Analysis found {len(issues)} issues, ATS Score: {ats_score}")
         
         return jsonify({
             'success': True,
             'filename': filename,
             'file_type': file_type,
             'resume_text': resume_text[:500] + '...' if len(resume_text) > 500 else resume_text,
-            'issues': issues
+            'issues': issues,
+            'ats_score': ats_score  # Added dynamic ATS score
         })
         
     except Exception as e:
+        print(f"❌ Critical error in upload_file: {str(e)}")
         return jsonify({'error': f'Error processing file: {str(e)}'}), 500
 
 @app.route('/health')
